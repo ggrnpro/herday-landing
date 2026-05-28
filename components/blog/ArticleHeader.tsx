@@ -43,31 +43,33 @@ export function ArticleHeader({
       </p>
 
       {author && (
-        <div className="flex items-center gap-4 border-t border-b border-[var(--color-line)] py-5">
-          <Link href={`/blog/author/${author.slug}`} className="shrink-0">
-            <Image
-              src={author.avatar}
-              alt={`Portrait of ${author.name}`}
-              width={56}
-              height={56}
-              className="rounded-full border border-[var(--color-line)]"
-            />
-          </Link>
-          <div className="flex-1 min-w-0">
-            <div>
-              <Link
-                href={`/blog/author/${author.slug}`}
-                className="font-medium text-[var(--color-ink)] hover:text-[var(--color-merlot)]"
-              >
-                {author.name}
-              </Link>
-              {author.credentials && (
-                <span className="text-[var(--color-ink-mute)] text-sm"> · {author.credentials}</span>
-              )}
+        <div className="border-t border-b border-[var(--color-line)] py-5 flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-4 min-w-0">
+            <Link href={`/blog/author/${author.slug}`} className="shrink-0">
+              <Image
+                src={author.avatar}
+                alt={`Portrait of ${author.name}`}
+                width={56}
+                height={56}
+                className="rounded-full border border-[var(--color-line)]"
+              />
+            </Link>
+            <div className="flex-1 min-w-0">
+              <div>
+                <Link
+                  href={`/blog/author/${author.slug}`}
+                  className="font-medium text-[var(--color-ink)] hover:text-[var(--color-merlot)]"
+                >
+                  {author.name}
+                </Link>
+                {author.credentials && (
+                  <span className="text-[var(--color-ink-mute)] text-sm"> · {author.credentials}</span>
+                )}
+              </div>
+              <div className="text-sm text-[var(--color-ink-mute)]">{author.role}</div>
             </div>
-            <div className="text-sm text-[var(--color-ink-mute)]">{author.role}</div>
           </div>
-          <div className="text-right font-mono text-[11px] uppercase tracking-[0.15em] text-[var(--color-ink-mute)] shrink-0">
+          <div className="font-mono text-[11px] uppercase tracking-[0.15em] text-[var(--color-ink-mute)] sm:text-right sm:shrink-0 sm:ml-auto pl-[72px] sm:pl-0">
             <div>Published {formatDate(article.publishedAt)}</div>
             {article.updatedAt !== article.publishedAt && (
               <div>Updated {formatDate(article.updatedAt)}</div>
