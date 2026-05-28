@@ -39,3 +39,23 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# temp image generation
+/.tmp-images/
+/.tmp-img-*.txt
+/.playwright-mcp/
+
+# qa screenshots from dev sessions
+/d-*.png
+/m-*.png
+/og-image-*.png
+/desktop-*.png
+
+# claude project locals
+/.claude/
+
+# private docs
+/_docs/
+/PRODUCT.md
+/DESIGN.md
+
