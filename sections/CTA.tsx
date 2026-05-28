@@ -59,18 +59,42 @@ export function CTA() {
           ) : (
             <form
               onSubmit={handleSubmit}
-              className="mt-12 mx-auto max-w-lg flex flex-col sm:flex-row gap-3 glass-strong rounded-full p-2"
+              className="mt-12 mx-auto max-w-lg flex flex-col sm:flex-row sm:gap-0 gap-3 sm:rounded-full sm:p-2 sm:items-center"
+              style={{
+                /* Desktop wrapper styling applied only via sm+ via class. For mobile we leave wrapper transparent so each pill stands alone. */
+              }}
             >
+              {/* Mobile-only background applied on wrapper at sm+ */}
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={copy.cta.placeholder}
-                className="flex-1 px-6 py-3.5 bg-transparent text-[15px] text-ink placeholder:text-ink-mute focus:outline-none rounded-full"
+                aria-label="Email address"
+                className="w-full sm:flex-1 rounded-full px-6 py-4 sm:py-3.5 text-[15px] text-ink placeholder:text-ink-mute focus:outline-none border border-white/90 sm:border-0"
+                style={{
+                  background: "rgba(255, 255, 255, 0.7)",
+                  backdropFilter: "blur(28px) saturate(160%)",
+                  WebkitBackdropFilter: "blur(28px) saturate(160%)",
+                  boxShadow:
+                    "inset 0 1px 0 rgba(255,255,255,0.8), 0 24px 48px -20px rgba(138,53,86,0.18)",
+                }}
               />
-              <button type="submit" className="btn-merlot whitespace-nowrap">
+              <button
+                type="submit"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-7 py-4 sm:py-3.5 font-medium text-[15px] text-cream whitespace-nowrap transition-all hover:-translate-y-px"
+                style={{
+                  background: "#8A3556",
+                  boxShadow: "0 14px 32px -12px rgba(138, 53, 86, 0.5)",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
                 {copy.cta.button}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </button>
             </form>
           )}
