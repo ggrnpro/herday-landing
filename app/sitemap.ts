@@ -36,6 +36,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.9,
     },
+    {
+      url: `${siteUrl}/tools/inner-critic-translator`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.9,
+    },
     ...Object.keys(CATEGORY_META).map((cat) => ({
       url: `${siteUrl}/blog/category/${cat}`,
       lastModified: latestArticle,

@@ -1,3 +1,5 @@
+import "server-only";
+
 import {
   SYSTEM_PROMPT,
   RESPONSE_SCHEMA,
@@ -5,50 +7,14 @@ import {
   type AffirmationAnswers,
 } from "./affirmation-prompt";
 
+export { LENSES, LENS_ORDER, type LensKey } from "./affirmation-lenses";
+
 export type GeneratedAffirmations = {
   affirmations: string[];
   imageQuote: string;
   costUsd: number;
   ms: number;
 };
-
-const LENS_ORDER = [
-  "balanced",
-  "process",
-  "distanced",
-  "commonHumanity",
-  "choosing",
-] as const;
-
-export type LensKey = (typeof LENS_ORDER)[number];
-
-export const LENSES: { key: LensKey; label: string; description: string }[] = [
-  {
-    key: "balanced",
-    label: "Balanced",
-    description: "Soft truth, with light.",
-  },
-  {
-    key: "process",
-    label: "In progress",
-    description: "Moving toward, not arrived.",
-  },
-  {
-    key: "distanced",
-    label: "From outside",
-    description: "Your name, in second person.",
-  },
-  {
-    key: "commonHumanity",
-    label: "Common ground",
-    description: "Many women, one weight.",
-  },
-  {
-    key: "choosing",
-    label: "Today's choice",
-    description: "What you are choosing now.",
-  },
-];
 
 function normalizeAffirmations(arr: unknown): string[] {
   const list = Array.isArray(arr)

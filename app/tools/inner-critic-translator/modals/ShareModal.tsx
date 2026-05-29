@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { LENSES } from "@/lib/affirmation-lenses";
-import type { AffirmationPayload } from "../lib/types";
+import { LENSES } from "@/lib/inner-critic-lenses";
+import type { InnerCriticPayload } from "../lib/types";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 type Props = {
-  payload: AffirmationPayload;
+  payload: InnerCriticPayload;
   onClose: () => void;
 };
 
@@ -16,31 +16,31 @@ function buildShareImageUrl(quote: string, name: string, lensLabel: string): str
   const params = new URLSearchParams({
     q: quote,
     n: name,
-    e: `A daily affirmation · ${lensLabel}`,
+    e: `An inner-critic translation · ${lensLabel}`,
   });
   return `/api/share-image?${params.toString()}`;
 }
 
 export function ShareModal({ payload, onClose }: Props) {
-  const { affirmations, answers } = payload;
+  const { translations, answers } = payload;
   const [index, setIndex] = useState(0);
   const [copied, setCopied] = useState(false);
 
-  const text = affirmations[index];
+  const text = translations[index];
   const name = answers.name || "you";
   const lens = LENSES[index];
   const imageUrl = buildShareImageUrl(text, name, lens?.label || "");
 
   function copy() {
     navigator.clipboard?.writeText(
-      `"${text}" — a daily affirmation · getherday.app`,
+      `"${text}" — a kinder translation · getherday.app`,
     );
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
 
   function go(dir: -1 | 1) {
-    setIndex((i) => (i + dir + affirmations.length) % affirmations.length);
+    setIndex((i) => (i + dir + translations.length) % translations.length);
   }
 
   return (
@@ -96,13 +96,13 @@ export function ShareModal({ payload, onClose }: Props) {
 
         <div className="p-7 md:p-10">
           <div className="tag mb-4">
-            Save · {index + 1} of {affirmations.length}
+            Save · {index + 1} of {translations.length}
           </div>
           <h2
             id="share-title"
-            className="font-display text-[clamp(22px,3.2vw,28px)] leading-[1.15] text-ink max-w-[26ch]"
+            className="font-display text-[clamp(22px,3.2vw,28px)] leading-[1.15] text-ink max-w-[24ch]"
           >
-            Save any of the five.{" "}
+            Save any of the four.{" "}
             <em className="italic font-light text-merlot">For your lock screen.</em>
           </h2>
 
@@ -135,18 +135,20 @@ export function ShareModal({ payload, onClose }: Props) {
 
                 <div className="absolute inset-0 p-7 md:p-9 flex flex-col justify-between">
                   <div className="font-mono text-[9px] uppercase tracking-[0.24em] text-merlot/80">
-                    A daily affirmation · {lens?.label}
+                    A kinder translation · {lens?.label}
                   </div>
 
                   <p
                     className="font-display italic leading-[1.3] text-ink relative"
                     style={{
                       fontSize:
-                        text.length > 160
-                          ? "clamp(15px, 2.6vw, 20px)"
-                          : text.length > 100
-                            ? "clamp(17px, 3vw, 23px)"
-                            : "clamp(19px, 3.4vw, 26px)",
+                        text.length > 220
+                          ? "clamp(13px, 2.2vw, 17px)"
+                          : text.length > 160
+                            ? "clamp(15px, 2.6vw, 20px)"
+                            : text.length > 100
+                              ? "clamp(17px, 3vw, 23px)"
+                              : "clamp(19px, 3.4vw, 26px)",
                     }}
                   >
                     <span className="text-merlot/40 text-[1.3em] font-display italic leading-none mr-1">
@@ -200,12 +202,12 @@ export function ShareModal({ payload, onClose }: Props) {
           </div>
 
           <div className="mt-5 flex items-center justify-center gap-2">
-            {affirmations.map((_, i) => (
+            {translations.map((_, i) => (
               <button
                 key={i}
                 type="button"
                 onClick={() => setIndex(i)}
-                aria-label={`Affirmation ${i + 1}`}
+                aria-label={`Translation ${i + 1}`}
                 className="h-1.5 rounded-full transition-all"
                 style={{
                   width: i === index ? 24 : 8,
@@ -250,7 +252,7 @@ export function ShareModal({ payload, onClose }: Props) {
             </button>
             <a
               href={imageUrl}
-              download={`herday-affirmation-${name.toLowerCase().replace(/\s+/g, "-")}-${index + 1}.png`}
+              download={`herday-translation-${name.toLowerCase().replace(/\s+/g, "-")}-${index + 1}.png`}
               className="btn-merlot py-3.5 no-underline"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">

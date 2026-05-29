@@ -3,20 +3,20 @@
 import Link from "next/link";
 import { motion } from "motion/react";
 import { Flower } from "@/components/Flower";
-import { LENSES } from "@/lib/affirmation-lenses";
-import type { AffirmationPayload } from "../lib/types";
+import { LENSES } from "@/lib/inner-critic-lenses";
+import type { InnerCriticPayload } from "../lib/types";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 type Props = {
-  payload: AffirmationPayload;
+  payload: InnerCriticPayload;
   onShare: () => void;
   onEmail: () => void;
   onWriteAnother: () => void;
 };
 
 export function ResultStage({ payload, onShare, onEmail, onWriteAnother }: Props) {
-  const { affirmations, answers } = payload;
+  const { translations, answers, criticType, criticIntent } = payload;
 
   return (
     <section className="relative">
@@ -40,7 +40,7 @@ export function ResultStage({ payload, onShare, onEmail, onWriteAnother }: Props
           transition={{ duration: 0.6, ease: EASE }}
           className="flex items-center justify-between mb-8"
         >
-          <span className="tag">For {answers.name}, today</span>
+          <span className="tag">A translation for {answers.name}</span>
           <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-mute">
             {new Date().toLocaleDateString("en-US", {
               year: "numeric",
@@ -50,24 +50,48 @@ export function ResultStage({ payload, onShare, onEmail, onWriteAnother }: Props
           </span>
         </motion.div>
 
-        <motion.h1
+        {/* IFS identification — main brand hook */}
+        <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: EASE }}
-          className="font-display text-[clamp(34px,5vw,52px)] leading-[1.05] tracking-[-0.02em] text-ink max-w-[16ch]"
+          transition={{ duration: 0.9, ease: EASE }}
+          className="relative rounded-[28px] p-7 md:p-9 mb-12 overflow-hidden"
+          style={{
+            background:
+              "linear-gradient(135deg, #FFEBF6 0%, #F6D7E8 45%, #E6D9FF 100%)",
+            boxShadow: "0 28px 64px -32px rgba(138, 53, 86, 0.3)",
+            border: "1px solid rgba(138, 53, 86, 0.1)",
+          }}
         >
-          Five <em className="shimmer-italic font-light">small true things</em> to carry today.
-        </motion.h1>
+          <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-merlot mb-3">
+            That voice sounds like
+          </div>
+          <h2 className="font-display text-[clamp(30px,4.5vw,44px)] leading-[1.1] tracking-[-0.02em] text-ink mb-3">
+            The <em className="italic font-light text-merlot">{criticType}</em>
+          </h2>
+          <p className="font-display italic text-[clamp(17px,2.1vw,21px)] leading-[1.45] text-ink/85 max-w-[44ch]">
+            It is {criticIntent}.
+          </p>
+        </motion.div>
 
-        <ul className="mt-10 space-y-5">
-          {affirmations.map((text, i) => {
+        <motion.h3
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.1, ease: EASE }}
+          className="font-display text-[clamp(26px,3.8vw,38px)] leading-[1.1] tracking-[-0.02em] text-ink max-w-[20ch] mb-8"
+        >
+          Four kinder <em className="shimmer-italic font-light">translations</em>.
+        </motion.h3>
+
+        <ul className="space-y-5">
+          {translations.map((text, i) => {
             const lens = LENSES[i];
             return (
               <motion.li
                 key={i}
                 initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                transition={{ duration: 0.8, delay: 0.15 + i * 0.18, ease: EASE }}
+                transition={{ duration: 0.8, delay: 0.2 + i * 0.18, ease: EASE }}
                 className="relative rounded-[28px] p-7 md:p-9 overflow-hidden"
                 style={{
                   background: "linear-gradient(180deg, #FFF8E9 0%, #FEF7DF 100%)",
@@ -83,7 +107,7 @@ export function ResultStage({ payload, onShare, onEmail, onWriteAnother }: Props
                     {lens?.description}
                   </span>
                 </div>
-                <p className="font-display italic text-[clamp(18px,2.4vw,24px)] leading-[1.45] text-ink">
+                <p className="font-display italic text-[clamp(18px,2.3vw,23px)] leading-[1.5] text-ink">
                   {text}
                 </p>
               </motion.li>
@@ -123,7 +147,7 @@ export function ResultStage({ payload, onShare, onEmail, onWriteAnother }: Props
                 </svg>
               }
               label="Save as image"
-              meta="Pick a quote"
+              meta="Pick a translation"
               onClick={onShare}
             />
             <ActionCard
@@ -158,7 +182,7 @@ export function ResultStage({ payload, onShare, onEmail, onWriteAnother }: Props
                   strokeLinejoin="round"
                 />
               </svg>
-              Write another set
+              Translate another voice
             </button>
             <Link
               href="/#cta"

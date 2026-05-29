@@ -1,3 +1,5 @@
+import "server-only";
+
 import { createHash } from "node:crypto";
 import { sql } from "./db";
 
@@ -13,11 +15,12 @@ import { sql } from "./db";
  *   - affirmation: 2/day (FREE_AFFIRMATION_LIMIT)
  */
 
-export type Tool = "letter" | "affirmation";
+export type Tool = "letter" | "affirmation" | "inner_critic";
 
 const LIMITS: Record<Tool, number> = {
   letter: Number(process.env.FREE_LETTER_LIMIT || 2),
   affirmation: Number(process.env.FREE_AFFIRMATION_LIMIT || 2),
+  inner_critic: Number(process.env.FREE_INNER_CRITIC_LIMIT || 2),
 };
 
 export function limitFor(tool: Tool): number {
