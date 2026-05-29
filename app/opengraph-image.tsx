@@ -128,7 +128,7 @@ export default async function Image() {
               display: "flex",
             }}
           >
-            herday.app
+            getherday.app
           </div>
         </div>
       </div>

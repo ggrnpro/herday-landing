@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { getAllArticles, getAllAuthors } from "@/lib/content/articles";
 import { CATEGORY_META } from "@/lib/content/types";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://herday.app";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://getherday.app";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();

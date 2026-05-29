@@ -14,7 +14,7 @@ export const copy = {
   brand: {
     name: "HerDay",
     tagline: "The other voice. Yours, but kind.",
-    domain: "herday.app",
+    domain: "getherday.app",
   },
 
   nav: {

@@ -16,7 +16,7 @@ import { buildArticleSchema } from "@/lib/content/schema";
 import { RelatedArticles } from "@/components/blog/MDXComponents";
 import { CATEGORY_META } from "@/lib/content/types";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://herday.app";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://getherday.app";
 
 export async function generateStaticParams() {
   return getAllArticles().map((a) => ({ slug: a.slug }));

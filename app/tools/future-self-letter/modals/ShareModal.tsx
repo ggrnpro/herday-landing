@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "motion/react";
+import { useMemo, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import type { LetterPayload } from "../Tool";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -12,26 +12,56 @@ type Props = {
 };
 
 /**
- * Picks one sentence from the body that feels share-worthy.
- * Heuristic: first sentence under 180 chars; falls back to first 160 chars.
+ * Fallback if the model didn't return shareQuotes for some reason —
+ * pick three reasonable sentences from the body.
  */
-function pickPullQuote(body: string): string {
+function fallbackQuotes(body: string): string[] {
   const sentences = body
     .replace(/\s+/g, " ")
     .split(/(?<=[.!?])\s+/)
     .map((s) => s.trim())
-    .filter((s) => s.length > 30 && s.length < 200);
-  return sentences[0] || body.slice(0, 160).trim() + "…";
+    .filter((s) => s.length > 50 && s.length < 220);
+  if (sentences.length >= 3) return sentences.slice(0, 3);
+  while (sentences.length < 3) {
+    sentences.push(body.slice(0, 160).trim() + "…");
+  }
+  return sentences.slice(0, 3);
+}
+
+function buildShareImageUrl(quote: string, name: string, futureAge: number): string {
+  const params = new URLSearchParams({
+    q: quote,
+    n: name,
+    a: String(futureAge),
+  });
+  return `/api/share-image?${params.toString()}`;
 }
 
 export function ShareModal({ letter, onClose }: Props) {
+  const quotes = useMemo(() => {
+    if (letter.shareQuotes && letter.shareQuotes.length >= 3) {
+      return letter.shareQuotes.slice(0, 3);
+    }
+    return fallbackQuotes(letter.body);
+  }, [letter]);
+
+  const [index, setIndex] = useState(0);
   const [copied, setCopied] = useState(false);
-  const quote = pickPullQuote(letter.body);
+  const quote = quotes[index];
+  const name = letter.answers.name || "you";
+  const futureAge = letter.futureAge;
+  const imageUrl = buildShareImageUrl(quote, name, futureAge);
 
   function copy() {
-    navigator.clipboard?.writeText(`"${quote}" — a letter from my future self · herday.app`);
+    navigator.clipboard?.writeText(
+      `"${quote}" — a letter from my future self · getherday.app`,
+    );
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  function go(dir: -1 | 1) {
+    setIndex((i) => (i + dir + quotes.length) % quotes.length);
   }
 
   return (
@@ -85,68 +115,136 @@ export function ShareModal({ letter, onClose }: Props) {
           </svg>
         </button>
 
-        <div className="p-8 md:p-10">
-          <div className="tag mb-5">Share</div>
+        <div className="p-7 md:p-10">
+          <div className="tag mb-4">Share · {index + 1} of {quotes.length}</div>
           <h2
             id="share-title"
-            className="font-display text-[clamp(24px,3.5vw,30px)] leading-[1.15] text-ink max-w-[22ch]"
+            className="font-display text-[clamp(22px,3.2vw,28px)] leading-[1.15] text-ink max-w-[24ch]"
           >
-            A small piece of your letter, for{" "}
+            Three small pieces of your letter, for{" "}
             <em className="italic font-light text-merlot">somewhere else.</em>
           </h2>
 
           {/* the share card itself — square, IG-ready */}
-          <motion.div
-            initial={{ opacity: 0, y: 16, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.7, ease: EASE, delay: 0.1 }}
-            className="mt-7 relative rounded-[24px] overflow-hidden aspect-square w-full"
-            style={{
-              background:
-                "linear-gradient(135deg, #FFEBF6 0%, #F6D7E8 45%, #E6D9FF 100%)",
-              boxShadow:
-                "0 32px 80px -30px rgba(138, 53, 86, 0.4), inset 0 1px 0 rgba(255,255,255,0.8)",
-            }}
-          >
-            {/* drifting blob */}
-            <motion.div
-              animate={{ x: [0, 30, 0], y: [0, -20, 0] }}
-              transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -top-10 -right-10 w-60 h-60 rounded-full"
-              style={{
-                background: "radial-gradient(circle, rgba(255,181,210,0.7), transparent 70%)",
-                filter: "blur(30px)",
-              }}
-            />
+          <div className="mt-6 relative">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 14, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.97 }}
+                transition={{ duration: 0.45, ease: EASE }}
+                className="relative rounded-[24px] overflow-hidden aspect-square w-full"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #FFEBF6 0%, #F6D7E8 45%, #E6D9FF 100%)",
+                  boxShadow:
+                    "0 32px 80px -30px rgba(138, 53, 86, 0.4), inset 0 1px 0 rgba(255,255,255,0.8)",
+                }}
+              >
+                {/* drifting blob */}
+                <motion.div
+                  animate={{ x: [0, 30, 0], y: [0, -20, 0] }}
+                  transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute -top-10 -right-10 w-60 h-60 rounded-full"
+                  style={{
+                    background:
+                      "radial-gradient(circle, rgba(255,181,210,0.7), transparent 70%)",
+                    filter: "blur(30px)",
+                  }}
+                />
 
-            <div className="absolute inset-0 p-7 md:p-10 flex flex-col justify-between">
-              <div className="font-mono text-[9px] uppercase tracking-[0.24em] text-merlot/80">
-                A letter from my future self
-              </div>
+                <div className="absolute inset-0 p-7 md:p-9 flex flex-col justify-between">
+                  <div className="font-mono text-[9px] uppercase tracking-[0.24em] text-merlot/80">
+                    A letter from my future self
+                  </div>
 
-              <p className="font-display italic text-[clamp(18px,3.4vw,26px)] leading-[1.35] text-ink relative">
-                <span className="text-merlot/40 text-[1.3em] font-display italic leading-none mr-1">
-                  &ldquo;
-                </span>
-                {quote}
-              </p>
+                  <p
+                    className="font-display italic leading-[1.3] text-ink relative"
+                    style={{
+                      fontSize:
+                        quote.length > 160
+                          ? "clamp(15px, 2.6vw, 20px)"
+                          : quote.length > 100
+                            ? "clamp(17px, 3vw, 23px)"
+                            : "clamp(19px, 3.4vw, 26px)",
+                    }}
+                  >
+                    <span className="text-merlot/40 text-[1.3em] font-display italic leading-none mr-1">
+                      &ldquo;
+                    </span>
+                    {quote}
+                  </p>
 
-              <div className="flex items-center justify-between">
-                <div className="font-display text-[15px] text-ink">
-                  — {letter.answers.name || "you"}, {letter.futureYear}
+                  <div className="flex items-center justify-between">
+                    <div className="font-display text-[15px] text-ink">
+                      — {name}, {futureAge}
+                    </div>
+                    <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-merlot">
+                      getherday.app
+                    </div>
+                  </div>
                 </div>
-                <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-merlot">
-                  herday.app
-                </div>
-              </div>
-            </div>
-          </motion.div>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* prev / next arrows */}
+            <button
+              type="button"
+              onClick={() => go(-1)}
+              aria-label="Previous quote"
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full glass-strong flex items-center justify-center hover:bg-white transition"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M15 18l-6-6 6-6"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => go(1)}
+              aria-label="Next quote"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full glass-strong flex items-center justify-center hover:bg-white transition"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M9 6l6 6-6 6"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
+
+          {/* dots */}
+          <div className="mt-5 flex items-center justify-center gap-2">
+            {quotes.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setIndex(i)}
+                aria-label={`Quote ${i + 1}`}
+                className="h-1.5 rounded-full transition-all"
+                style={{
+                  width: i === index ? 24 : 8,
+                  background:
+                    i === index
+                      ? "var(--color-merlot)"
+                      : "rgba(138, 53, 86, 0.25)",
+                }}
+              />
+            ))}
+          </div>
 
           <div className="mt-7 grid sm:grid-cols-2 gap-3">
-            <button
-              onClick={copy}
-              className="btn-ghost py-3.5"
-            >
+            <button onClick={copy} className="btn-ghost py-3.5">
               {copied ? (
                 <>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -175,7 +273,11 @@ export function ShareModal({ letter, onClose }: Props) {
                 </>
               )}
             </button>
-            <button className="btn-merlot py-3.5">
+            <a
+              href={imageUrl}
+              download={`herday-letter-${name.toLowerCase().replace(/\s+/g, "-")}-${index + 1}.png`}
+              className="btn-merlot py-3.5 no-underline"
+            >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"
@@ -186,13 +288,8 @@ export function ShareModal({ letter, onClose }: Props) {
                 />
               </svg>
               Save image
-            </button>
+            </a>
           </div>
-
-          <p className="mt-5 text-[12px] text-ink-mute text-center">
-            Image download arrives with the next update. For now: long-press the card on
-            mobile to save.
-          </p>
         </div>
       </motion.div>
     </motion.div>

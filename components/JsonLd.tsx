@@ -1,6 +1,6 @@
 import { copy } from "@/messages/en";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://herday.app";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://getherday.app";
 
 export function JsonLd() {
   const org = {

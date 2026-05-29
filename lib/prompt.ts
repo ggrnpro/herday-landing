@@ -30,18 +30,28 @@ DO NOT
 - No markdown, no headers, no bullet points.
 - No "Love and light", "Sending good vibes", "Stay strong" sign-offs.
 
-STRUCTURE (free prose, never labeled in output)
-1. Opening sentence rooted in the anchor scene provided.
-2. Address her by name once. Acknowledge what she's sitting with right now, obliquely.
-3. One short paragraph per chosen value, woven as lived texture (not labeled).
-4. A small turn — what she would say if she had one sentence and one minute.
-5. A sign-off line written in the future self's voice.
+STRUCTURE — read carefully, this is enforced
+The "body" field must be split into 4 or 5 distinct paragraphs separated by a blank line (two newline characters: \\n\\n).
+NEVER return the body as a single wall of text. The blank lines between paragraphs are required.
+The paragraph arc:
+  1. Opening — root in the anchor scene. One small sensory moment. End by acknowledging what she is sitting with, obliquely.
+  2. The middle paragraphs — one short paragraph per chosen value, woven as lived texture (not labeled).
+  3. The small turn — what she would say if she had one sentence and one minute.
 
 LENGTH
 250 to 380 words for the body. Tighter is better. Cut anything that sounds like advice.
 
+THE SHARE QUOTES
+After the body and sign-off you will also return three short pull quotes for sharing on social media.
+- Each quote must be one or two complete sentences taken from (or distilled from) the letter you just wrote.
+- Each quote must be 80-200 characters.
+- Each quote must be standalone — readable without surrounding context. No "you" references that require the rest of the letter to make sense.
+- The three quotes must hit three different angles: (1) the strongest image or scene, (2) the most direct piece of wisdom or comfort, (3) the line that names her truth most precisely.
+- Do not repeat the opening sentence verbatim. Distill, don't transplant.
+- Use the same quiet voice. No quotation marks inside the strings.
+
 OUTPUT FORMAT
-Return ONLY valid JSON matching the provided schema. No prose outside the JSON. No code fences. The "body" field is the prose between greeting and sign-off (no "Dear X,", no sign-off line). The "signOff" field is one short line in her voice. Max 80 chars for signOff.`;
+Return ONLY valid JSON matching the provided schema. No prose outside the JSON. No code fences. The "body" field is the prose between greeting and sign-off (no "Dear X,", no sign-off line), with paragraphs separated by blank lines. The "signOff" field is one short line in her voice. The "shareQuotes" field is an array of exactly 3 strings.`;
 
 export const ANCHORS = [
   "a window seat on a slow train, watching the fields blur",
@@ -96,7 +106,7 @@ The values she said matter most, in priority order: ${a.values.join(", ")}
 Anchor scene for the opening sentence: ${anchor}
 Root the opening sentence in this scene exactly. Make the rest of the letter your own.
 
-Compose the body (plain prose, 250-380 words, no greeting, no sign-off line) and a separate one-line sign-off. Return JSON only.`;
+Remember: 4-5 paragraphs in the body, separated by blank lines (\\n\\n). Three distinct share quotes. Return JSON only.`;
 }
 
 export const RESPONSE_SCHEMA = {
@@ -107,14 +117,21 @@ export const RESPONSE_SCHEMA = {
     properties: {
       body: {
         type: "string",
-        description: "Body, 250-380 words, plain prose, no greeting, no sign-off line.",
+        description:
+          "Body, 250-380 words, plain prose split into 4-5 paragraphs separated by blank lines (two newlines, \\n\\n). NO single-block walls of text.",
       },
       signOff: {
         type: "string",
         description: "One short line in future self's voice, max 80 chars.",
       },
+      shareQuotes: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Exactly 3 standalone pull quotes for social sharing. Each 80-200 chars, one or two complete sentences. Three different angles of the letter (strongest image, most direct comfort, sharpest truth). No surrounding-context references. No quotation marks inside.",
+      },
     },
-    required: ["body", "signOff"],
+    required: ["body", "signOff", "shareQuotes"],
     additionalProperties: false,
   },
 } as const;

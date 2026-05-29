@@ -6,6 +6,7 @@ export type LetterPayload = {
   greeting: string;
   closing: string;
   signOff: string;
+  shareQuotes: string[];
   futureAge: number;
   futureYear: number;
 };

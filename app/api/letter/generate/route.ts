@@ -70,6 +70,7 @@ export async function POST(req: Request) {
       greeting: `Dear ${payload.name},`,
       body: letter.body,
       signOff: letter.signOff,
+      shareQuotes: letter.shareQuotes,
       futureAge: letter.futureAge,
       closing: `${letter.signOff}\n\n— you, ${letter.futureAge}`,
       futureYear: new Date().getFullYear() + Math.max(Math.round(payload.horizonMonths / 12), 1),

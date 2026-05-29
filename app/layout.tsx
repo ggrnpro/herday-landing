@@ -28,7 +28,7 @@ const jetbrains = JetBrains_Mono({
   weight: ["400", "500"],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://herday.app";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://getherday.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

@@ -9,7 +9,7 @@ import { Footer } from "@/sections/Footer";
 import { mdxComponents } from "@/components/blog/MDXComponents";
 import { getAllArticles, getAllAuthors, getAuthor } from "@/lib/content/articles";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://herday.app";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://getherday.app";
 
 export async function generateStaticParams() {
   return getAllAuthors().map((a) => ({ slug: a.slug }));
