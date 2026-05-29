@@ -107,9 +107,48 @@ Notifies Bing, Yandex, Seznam, Naver, Yep to recrawl on publish/edit. **Google i
 
 ## Free-tools strategy
 
-8 tools planned (P1/P2/P3 across 6 sprints). 3-use anonymous limit per tool. Goal = App Store install. No paywall. Voice provider TBD. All text gen via OpenRouter. See `MEMORY.md` for full plan.
+8 tools planned (P1/P2/P3 across 6 sprints). **2-use anonymous limit per IP per day** (`FREE_LETTER_LIMIT` env, default 2). Goal = App Store install. No paywall. Voice provider TBD. All text gen via OpenRouter. See `MEMORY.md` for full plan.
 
-First tool live: `/tools/future-self-letter`.
+First tool live: `/tools/future-self-letter` — full prod backend wired.
+
+## Letter generator backend
+
+```
+app/api/letter/generate    POST  rate-limited; calls OpenRouter; returns letter JSON
+app/api/letter/schedule    POST  saves to scheduled_letters; sends sealed-confirmation email
+app/api/cron/send-letters  GET   Vercel Cron daily 9am UTC (vercel.json); auth via CRON_SECRET
+lib/openrouter.ts          generateLetter() with retry-on-parse-fail
+lib/prompt.ts              canonical SYSTEM + ANCHORS + RESPONSE_SCHEMA — single source
+lib/rate-limit.ts          SHA-256(ip+salt) keyed daily counter in postgres
+lib/db.ts                  postgres-js singleton (Neon pooled; prepare:false)
+emails/FutureSelfLetter.tsx       paper-card React Email template
+emails/ScheduleConfirmation.tsx   sealed confirmation email
+db/migrations/0001_init.sql       scheduled_letters + rate_limits tables
+scripts/migrate.ts                applies migrations (tracks _migrations table)
+scripts/test-letter-flow.tsx      single-shot OpenRouter→Resend test (gitignored)
+scripts/test-schedule-e2e.tsx     full generate→schedule→wait→cron→send test
+vercel.json                       cron schedule "0 9 * * *"
+```
+
+**Voice rules + prompt design rationale:** `memory/reference_letter_prompt.md`. If you tweak the SYSTEM prompt in `lib/prompt.ts`, update memory too.
+
+**Env vars** required in Vercel prod (Neon Postgres + OpenRouter + Resend already wired by Marketplace):
+- `OPENROUTER_API_KEY` · `OPENROUTER_MODEL` (`google/gemini-3.5-flash`) · `OPENROUTER_REFERER` · `OPENROUTER_TITLE`
+- `RESEND_API_KEY` · `EMAIL_FROM` (`info@getherday.app`, domain verified) · `EMAIL_FROM_NAME`
+- `DATABASE_URL` · `DATABASE_URL_UNPOOLED` (migrations only)
+- `CRON_SECRET` (32-byte hex; same in Vercel + checked in cron route)
+- `RATE_LIMIT_SALT` (random; prevents rainbow tables on hashed IPs)
+- `FREE_LETTER_LIMIT` (default 2)
+- `NEXT_PUBLIC_SITE_URL` (`https://getherday.app`)
+
+**Cron note:** Vercel Hobby supports only daily cron granularity. Pro/Enterprise = down to 1 min. `0 9 * * *` runs once daily at 9am UTC. To process letters sooner than next 9am UTC, manually hit `GET /api/cron/send-letters` with `Authorization: Bearer $CRON_SECRET`.
+
+**Don't regress:**
+- Cron route checks `Authorization: Bearer CRON_SECRET` only in production (dev allows unauth localhost).
+- Rate limit only counted on **successful** generations — failed OpenRouter calls don't burn user's quota.
+- `scheduled_letters` is the snapshot — once saved, body/signOff never re-generate. Cheaper + same letter user previewed.
+- IP hashed before storage (GDPR). Never log raw IP.
+- `prepare: false` on postgres client — Neon pooler doesn't support prepared statements.
 
 ## Ops / dev workflow
 

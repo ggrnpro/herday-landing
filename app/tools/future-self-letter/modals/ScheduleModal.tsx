@@ -22,8 +22,11 @@ const PRESETS = [
 ];
 
 function addDays(days: number): Date {
+  // Normalize to 9am local time on the target day so the letter arrives
+  // "in the morning" rather than at whatever moment the user clicked.
   const d = new Date();
   d.setDate(d.getDate() + days);
+  d.setHours(9, 0, 0, 0);
   return d;
 }
 
@@ -45,18 +48,47 @@ export function ScheduleModal({ letter, onClose }: Props) {
   const [customDate, setCustomDate] = useState<string>(isoDate(addDays(365)));
   const [email, setEmail] = useState("");
   const [confirmed, setConfirmed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const usingCustom = selectedDays === 0;
   const finalDate = usingCustom
     ? new Date(customDate + "T09:00:00")
     : addDays(selectedDays);
   const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const canSubmit = validEmail && !isNaN(finalDate.getTime()) && finalDate > new Date();
+  const canSubmit =
+    !submitting && validEmail && !isNaN(finalDate.getTime()) && finalDate > new Date();
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!canSubmit) return;
-    // Visual confirmation only — backend wiring comes later.
-    setConfirmed(true);
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const res = await fetch("/api/letter/schedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          scheduledFor: finalDate.toISOString(),
+          letter: {
+            answers: { name: letter.answers.name },
+            body: letter.body,
+            signOff: letter.signOff,
+            futureAge: letter.futureAge,
+          },
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setSubmitError(err.message || err.error || "Could not save your letter.");
+        return;
+      }
+      setConfirmed(true);
+    } catch {
+      setSubmitError("We couldn't reach the page. Check your connection.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -127,6 +159,8 @@ export function ScheduleModal({ letter, onClose }: Props) {
               canSubmit={canSubmit}
               onSubmit={handleSubmit}
               finalDate={finalDate}
+              submitting={submitting}
+              submitError={submitError}
             />
           ) : (
             <Sealed letter={letter} finalDate={finalDate} email={email} onClose={onClose} />
@@ -148,6 +182,8 @@ function ScheduleForm({
   canSubmit,
   onSubmit,
   finalDate,
+  submitting,
+  submitError,
 }: {
   letter: LetterPayload;
   selectedDays: number;
@@ -159,6 +195,8 @@ function ScheduleForm({
   canSubmit: boolean;
   onSubmit: () => void;
   finalDate: Date;
+  submitting: boolean;
+  submitError: string | null;
 }) {
   return (
     <>
@@ -259,17 +297,24 @@ function ScheduleForm({
         disabled={!canSubmit}
         className="mt-8 w-full btn-merlot text-[16px] py-4 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
       >
-        Seal the letter
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M5 12h14M13 6l6 6-6 6"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        {submitting ? "Sealing..." : "Seal the letter"}
+        {!submitting && (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M5 12h14M13 6l6 6-6 6"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        )}
       </button>
+      {submitError && (
+        <p className="mt-3 text-[13px] text-merlot text-center" role="alert">
+          {submitError}
+        </p>
+      )}
     </>
   );
 }

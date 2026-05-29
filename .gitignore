@@ -54,6 +54,10 @@ next-env.d.ts
 # claude project locals
 /.claude/
 
+# local test scripts
+/scripts/test-*.tsx
+/scripts/test-*.mjs
+
 # private docs
 /_docs/
 /PRODUCT.md

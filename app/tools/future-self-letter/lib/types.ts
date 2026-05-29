@@ -5,5 +5,14 @@ export type LetterPayload = {
   body: string;
   greeting: string;
   closing: string;
+  signOff: string;
+  futureAge: number;
   futureYear: number;
+};
+
+export type RateLimitInfo = {
+  used: number;
+  remaining: number;
+  limit: number;
+  blocked: boolean;
 };
