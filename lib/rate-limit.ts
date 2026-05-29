@@ -15,12 +15,14 @@ import { sql } from "./db";
  *   - affirmation: 2/day (FREE_AFFIRMATION_LIMIT)
  */
 
-export type Tool = "letter" | "affirmation" | "inner_critic";
+export type Tool = "letter" | "affirmation" | "inner_critic" | "subscribe";
 
 const LIMITS: Record<Tool, number> = {
   letter: Number(process.env.FREE_LETTER_LIMIT || 2),
   affirmation: Number(process.env.FREE_AFFIRMATION_LIMIT || 2),
   inner_critic: Number(process.env.FREE_INNER_CRITIC_LIMIT || 2),
+  // Anti-abuse cap on waitlist signups per IP per day (not a "free tool").
+  subscribe: Number(process.env.SUBSCRIBE_IP_LIMIT || 8),
 };
 
 export function limitFor(tool: Tool): number {

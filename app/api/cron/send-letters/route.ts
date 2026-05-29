@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { sql } from "@/lib/db";
 import { FutureSelfLetterEmail } from "@/emails/FutureSelfLetter";
+import { processSequence } from "@/lib/send-sequence";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,8 +47,14 @@ export async function GET(req: Request) {
     limit 100
   `;
 
+  // Drive the onboarding email sequence on the same daily tick (one Hobby cron
+  // does both letters + waitlist drip). Manual-only route also lives at
+  // /api/cron/send-sequence for triggering sooner.
+  const sequence = await processSequence();
+
   if (due.length === 0) {
-    return NextResponse.json({ ok: true, processed: 0 });
+    await sql`delete from rate_limits where day < current_date - 30`;
+    return NextResponse.json({ ok: true, processed: 0, sequence });
   }
 
   const resend = new Resend(process.env.RESEND_API_KEY);
@@ -100,5 +107,5 @@ export async function GET(req: Request) {
   // Daily GC of old rate-limit rows. Cheap, idempotent.
   await sql`delete from rate_limits where day < current_date - 30`;
 
-  return NextResponse.json({ ok: true, processed: due.length, sent, failed });
+  return NextResponse.json({ ok: true, processed: due.length, sent, failed, sequence });
 }

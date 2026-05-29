@@ -8,11 +8,34 @@ import { Flower } from "@/components/Flower";
 export function CTA() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!email) return;
-    setSubmitted(true);
+    if (!email || submitting) return;
+    setSubmitting(true);
+    setError("");
+    try {
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, source: "cta" }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "failed");
+      }
+      setSubmitted(true);
+    } catch (err) {
+      setError(
+        err instanceof Error && err.message === "invalid_email"
+          ? "That email looks off. Mind checking it?"
+          : "Something went wrong. Please try again in a moment.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -53,7 +76,7 @@ export function CTA() {
                 You&rsquo;re in.
               </p>
               <p className="mt-4 text-[16px] text-ink-soft leading-[1.55]">
-                The first letter from your weekly read lands in your inbox on Sunday. We&rsquo;ll write when HerDay opens to your wave.
+                Check your inbox. Lena just sent your first note, with one small thing to try right now. A few more will follow as we build, and you&rsquo;ll get the invite the day HerDay opens to your wave.
               </p>
             </div>
           ) : (
@@ -81,15 +104,16 @@ export function CTA() {
                 />
                 <button
                   type="submit"
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-full px-7 py-4 font-medium text-[15px] text-cream whitespace-nowrap transition-all hover:-translate-y-px"
+                  disabled={submitting}
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-full px-7 py-4 font-medium text-[15px] text-cream whitespace-nowrap transition-all hover:-translate-y-px disabled:opacity-60"
                   style={{
                     background: "#8A3556",
                     boxShadow: "0 14px 32px -12px rgba(138, 53, 86, 0.5)",
                     border: "none",
-                    cursor: "pointer",
+                    cursor: submitting ? "wait" : "pointer",
                   }}
                 >
-                  {copy.cta.button}
+                  {submitting ? "Joining…" : copy.cta.button}
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                     <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
@@ -131,22 +155,32 @@ export function CTA() {
                 />
                 <button
                   type="submit"
-                  className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-medium text-[14.5px] text-cream whitespace-nowrap transition-all hover:-translate-y-px shrink-0"
+                  disabled={submitting}
+                  className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-medium text-[14.5px] text-cream whitespace-nowrap transition-all hover:-translate-y-px shrink-0 disabled:opacity-60"
                   style={{
                     background:
                       "linear-gradient(135deg, #8A3556 0%, #6B1923 100%)",
                     boxShadow:
                       "0 10px 24px -8px rgba(138, 53, 86, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15)",
                     border: "none",
-                    cursor: "pointer",
+                    cursor: submitting ? "wait" : "pointer",
                   }}
                 >
-                  {copy.cta.button}
+                  {submitting ? "Joining…" : copy.cta.button}
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                     <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
               </form>
+
+              {error ? (
+                <p
+                  role="alert"
+                  className="mt-4 text-[14px] text-merlot"
+                >
+                  {error}
+                </p>
+              ) : null}
             </>
           )}
         </Reveal>

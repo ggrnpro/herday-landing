@@ -172,6 +172,44 @@ emails/Affirmations.tsx        paper-card React Email template for the 5
 
 **Share image route** now accepts `e` (eyebrow) query param. Letter passes nothing (defaults to "A letter from my future self"). Affirmation tool passes `A daily affirmation · {lensLabel}`. Same `/api/share-image` route serves both tools — DRY.
 
+## Waitlist + onboarding email sequence
+
+The CTA + Pricing forms feed a live waitlist with a humanized drip authored in **Lena Hartwell's** voice (the site's editorial-lead author persona — `content/authors/lena-hartwell.mdx`).
+
+```
+app/api/subscribe          POST  validate + IP rate-limit + insert subscriber + Resend contact + send welcome
+app/api/unsubscribe        GET/POST  token-based one-click unsubscribe (RFC 8058); flips PG + Resend
+app/api/cron/send-sequence GET   manual-trigger route for the drip (Bearer CRON_SECRET)
+lib/email-sequence.ts      SINGLE SOURCE: SEQUENCE steps (copy, delays, CTAs), SENDER, url helpers
+lib/send-sequence.ts       processSequence() — sends every due step, advances next_step
+emails/SequenceEmail.tsx   generic paper-card template: hero illo + prose + tool CTA + Lena sig + unsub
+db/migrations/0003_subscribers.sql   subscribers table (sequence progress + unsub token)
+public/email/*.jpg         4 watercolour-botanical hero illos (gen-api, blog style)
+```
+
+**Architecture decisions (locked with user):**
+- **Sequencing engine = our own cron**, NOT Resend Automations — keeps copy version-controlled & humanizable. The drip runs on the **existing daily `send-letters` cron** (it calls `processSequence()`), so only ONE Hobby cron is used. `send-sequence` route is for manual triggering only (no `vercel.json` entry).
+- **Storage:** Resend Audience = source of truth for sends; `subscribers` table in Neon = mirror (backup, dedupe, unsub tokens, drip progress).
+- **Single opt-in.** Consent line + one-click unsubscribe via `List-Unsubscribe` header + footer link.
+- **Sender persona = Lena.** From `EMAIL_FROM` with `Reply-To: lena@getherday.app`.
+
+**The sequence (auto drip, days from signup):**
+- 0 · `welcome` (immediate, transactional) → Affirmation Generator
+- 1 · `science-affirmations` (+2d) — Wood 2009 paradox / conditional language → Inner-Critic Translator
+- 2 · `science-inner-voice` (+5d) — Kross self-distancing + Neff common humanity → Future-Self Letter
+- 3 · `your-own-voice` (+9d) — voice-psychology hook + soft product reveal → /#how-it-works
+- **Launch email = MANUAL broadcast** when the app ships (date unknown — not in the auto drip).
+
+**Don't regress:**
+- Welcome is transactional (instant); steps 1–3 are cron-driven off `created_at + delayDays`.
+- Rate-limit `subscribe` quota is only consumed on a **fresh** insert (resubmitting the same email is idempotent, no second welcome, no quota burn).
+- Email illustrations are 4 hero JPGs in `public/email/`, generated via gen-api in the blog watercolour style, downscaled (≤~1080px) for inbox weight. Referenced by absolute URL (`NEXT_PUBLIC_SITE_URL`).
+- Copy lives in `lib/email-sequence.ts`, not Resend templates. No em dashes.
+
+**New env vars (Vercel prod):**
+- `RESEND_AUDIENCE_ID` — the Resend Audience to store contacts in (subscribe/unsubscribe skip gracefully if unset)
+- `SUBSCRIBE_IP_LIMIT` (default 8) — anti-abuse signups per IP per day
+
 ## Ops / dev workflow
 
 - Dev: `npm run dev` (port 3000). If port stuck: `Get-Process node | Stop-Process -Force` then restart.
