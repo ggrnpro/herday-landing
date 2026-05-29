@@ -37,7 +37,7 @@ export async function POST(req: Request) {
   const ip = extractIp(req);
 
   // Peek first so we return a friendly 429 without an extra DB write.
-  const pre = await peekRateLimit(ip);
+  const pre = await peekRateLimit(ip, "letter");
   if (pre.blocked) {
     return NextResponse.json(
       {
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
   }
 
   // Only count successful generations against the limit.
-  const post = await consumeRateLimit(ip);
+  const post = await consumeRateLimit(ip, "letter");
 
   return NextResponse.json({
     ok: true,

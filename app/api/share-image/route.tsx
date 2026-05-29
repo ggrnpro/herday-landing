@@ -69,6 +69,7 @@ export async function GET(req: Request) {
   const rawQuote = (url.searchParams.get("q") || "").slice(0, 240);
   const name = (url.searchParams.get("n") || "you").slice(0, 60);
   const age = (url.searchParams.get("a") || "").slice(0, 6);
+  const eyebrow = (url.searchParams.get("e") || "A letter from my future self").slice(0, 60);
   const quote = rawQuote.replace(/^[“”"']+|[“”"']+$/g, "").trim();
 
   if (!quote) {
@@ -143,7 +144,7 @@ export async function GET(req: Request) {
             color: "#8A3556",
           }}
         >
-          A letter from my future self
+          {eyebrow}
         </div>
 
         {/* quote */}

@@ -5,11 +5,12 @@ import { AnimatePresence, motion } from "motion/react";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
+// Distinct from the letter tool — affirmation cadence is different.
 const PHASES = [
-  "Listening to what you said.",
-  "Sitting with what you didn't.",
-  "Hearing your future.",
-  "Choosing the right words.",
+  "Listening for the quiet under your words.",
+  "Counting the colors you didn't name.",
+  "Sitting with what is also true.",
+  "Trimming what's already too loud.",
   "Almost ready.",
 ];
 
@@ -25,9 +26,7 @@ export function WritingStage({ onComplete }: Props) {
     const interval = setInterval(() => {
       setPhase((p) => Math.min(p + 1, PHASES.length - 1));
     }, PHASE_MS);
-
     const timer = setTimeout(onComplete, TOTAL_MS);
-
     return () => {
       clearInterval(interval);
       clearTimeout(timer);
@@ -37,9 +36,7 @@ export function WritingStage({ onComplete }: Props) {
   return (
     <section className="relative min-h-[70vh] flex items-center justify-center">
       <div className="container-narrow flex flex-col items-center text-center">
-        {/* breathing bubble */}
         <div className="relative h-56 w-56 flex items-center justify-center">
-          {/* outer slow halo */}
           <motion.div
             aria-hidden
             animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.5, 0.3] }}
@@ -51,7 +48,6 @@ export function WritingStage({ onComplete }: Props) {
               filter: "blur(20px)",
             }}
           />
-          {/* middle */}
           <motion.div
             aria-hidden
             animate={{ scale: [0.96, 1.06, 0.96] }}
@@ -63,7 +59,6 @@ export function WritingStage({ onComplete }: Props) {
               filter: "blur(8px)",
             }}
           />
-          {/* core */}
           <motion.div
             animate={{ scale: [1, 1.08, 1] }}
             transition={{ duration: 3, ease: "easeInOut", repeat: Infinity }}
@@ -75,7 +70,6 @@ export function WritingStage({ onComplete }: Props) {
           />
         </div>
 
-        {/* cycling copy */}
         <div className="mt-12 h-16 flex items-center justify-center">
           <AnimatePresence mode="wait">
             <motion.p
@@ -97,7 +91,7 @@ export function WritingStage({ onComplete }: Props) {
           transition={{ delay: 0.5, duration: 0.6 }}
           className="mt-6 font-mono text-[11px] uppercase tracking-[0.22em] text-merlot"
         >
-          Writing your letter
+          Writing your five
         </motion.div>
       </div>
     </section>

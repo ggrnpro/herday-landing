@@ -109,7 +109,7 @@ Notifies Bing, Yandex, Seznam, Naver, Yep to recrawl on publish/edit. **Google i
 
 8 tools planned (P1/P2/P3 across 6 sprints). **2-use anonymous limit per IP per day** (`FREE_LETTER_LIMIT` env, default 2). Goal = App Store install. No paywall. Voice provider TBD. All text gen via OpenRouter. See `MEMORY.md` for full plan.
 
-First tool live: `/tools/future-self-letter` — full prod backend wired.
+First two tools live: `/tools/future-self-letter` and `/tools/affirmation-generator`.
 
 ## Letter generator backend
 
@@ -138,7 +138,7 @@ vercel.json                       cron schedule "0 9 * * *"
 - `DATABASE_URL` · `DATABASE_URL_UNPOOLED` (migrations only)
 - `CRON_SECRET` (32-byte hex; same in Vercel + checked in cron route)
 - `RATE_LIMIT_SALT` (random; prevents rainbow tables on hashed IPs)
-- `FREE_LETTER_LIMIT` (default 2)
+- `FREE_LETTER_LIMIT` (default 2) · `FREE_AFFIRMATION_LIMIT` (default 2) — per-tool, per-IP, per-day
 - `NEXT_PUBLIC_SITE_URL` (`https://getherday.app`)
 
 **Cron note:** Vercel Hobby supports only daily cron granularity. Pro/Enterprise = down to 1 min. `0 9 * * *` runs once daily at 9am UTC. To process letters sooner than next 9am UTC, manually hit `GET /api/cron/send-letters` with `Authorization: Bearer $CRON_SECRET`.
@@ -149,6 +149,28 @@ vercel.json                       cron schedule "0 9 * * *"
 - `scheduled_letters` is the snapshot — once saved, body/signOff never re-generate. Cheaper + same letter user previewed.
 - IP hashed before storage (GDPR). Never log raw IP.
 - `prepare: false` on postgres client — Neon pooler doesn't support prepared statements.
+- `rate_limits` is keyed on `(ip_hash, day, tool)` — each tool counts independently. `tool` column defaults to `'letter'` for backward compat with rows from migration 0001.
+
+## Affirmation generator backend
+
+```
+app/api/affirmations/generate  POST  rate-limited; OpenRouter call; returns 5 affirmations + imageQuote
+app/api/affirmations/email     POST  sends the 5 to user's inbox via Resend
+lib/affirmation-prompt.ts      canonical SYSTEM + USER + schema + NEEDS/TONES constants
+lib/affirmation-openrouter.ts  generateAffirmations() + LENSES export (5 evidence-based lenses)
+emails/Affirmations.tsx        paper-card React Email template for the 5
+```
+
+**Five lenses (always in this order):**
+1. Balanced framing (Wood, Perunovic, Lee 2009 — acknowledge struggle + light)
+2. Process, not outcome (movement language, no "I am rich")
+3. Self-distanced (Kross — uses her name + second-person "you")
+4. Common humanity (Neff — universal struggle without Instagram quote vibe)
+5. Choosing — "Today, I am choosing..." present-tense agency
+
+**Voice + prompt rationale:** `memory/reference_affirmation_prompt.md`. Tweak prompt → mirror memory.
+
+**Share image route** now accepts `e` (eyebrow) query param. Letter passes nothing (defaults to "A letter from my future self"). Affirmation tool passes `A daily affirmation · {lensLabel}`. Same `/api/share-image` route serves both tools — DRY.
 
 ## Ops / dev workflow
 

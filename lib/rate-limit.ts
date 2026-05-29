@@ -2,19 +2,27 @@ import { createHash } from "node:crypto";
 import { sql } from "./db";
 
 /**
- * Rate limit for anonymous letter generation.
+ * Per-tool, per-IP, per-day generation counter.
  *
- * Storage: Postgres `rate_limits` table keyed on (ip_hash, day).
- * Hash: SHA-256(ip + salt) so we don't store raw IPs (GDPR friendly).
+ * Storage: Postgres `rate_limits` table keyed on (ip_hash, day, tool).
+ * Hash: SHA-256(ip + salt) truncated to 32 chars so we don't store
+ * raw IPs (GDPR friendly).
  *
- * Caller passes the raw IP from request headers; we hash here.
- *
- * Defaults to 2 letters/day per IP. Override via FREE_LETTER_LIMIT env.
+ * Defaults:
+ *   - letter: 2/day      (FREE_LETTER_LIMIT)
+ *   - affirmation: 2/day (FREE_AFFIRMATION_LIMIT)
  */
 
-export const FREE_LETTER_LIMIT = Number(
-  process.env.FREE_LETTER_LIMIT || 2,
-);
+export type Tool = "letter" | "affirmation";
+
+const LIMITS: Record<Tool, number> = {
+  letter: Number(process.env.FREE_LETTER_LIMIT || 2),
+  affirmation: Number(process.env.FREE_AFFIRMATION_LIMIT || 2),
+};
+
+export function limitFor(tool: Tool): number {
+  return LIMITS[tool];
+}
 
 function hashIp(ip: string): string {
   const salt = process.env.RATE_LIMIT_SALT || "herday-default-salt";
@@ -36,43 +44,37 @@ export type RateLimitState = {
   blocked: boolean;
 };
 
-/**
- * Check current state without incrementing.
- */
-export async function peekRateLimit(ip: string): Promise<RateLimitState> {
+export async function peekRateLimit(ip: string, tool: Tool): Promise<RateLimitState> {
   const ipHash = hashIp(ip);
   const rows = await sql<{ count: number }[]>`
     select count from rate_limits
-    where ip_hash = ${ipHash} and day = current_date
+    where ip_hash = ${ipHash} and day = current_date and tool = ${tool}
   `;
   const used = rows[0]?.count ?? 0;
+  const limit = LIMITS[tool];
   return {
     used,
-    remaining: Math.max(0, FREE_LETTER_LIMIT - used),
-    limit: FREE_LETTER_LIMIT,
-    blocked: used >= FREE_LETTER_LIMIT,
+    remaining: Math.max(0, limit - used),
+    limit,
+    blocked: used >= limit,
   };
 }
 
-/**
- * Atomically increment and return new state. Returns blocked=true if the
- * increment would exceed the limit — caller should not consume the action.
- */
-export async function consumeRateLimit(ip: string): Promise<RateLimitState> {
+export async function consumeRateLimit(ip: string, tool: Tool): Promise<RateLimitState> {
   const ipHash = hashIp(ip);
-  // Atomic upsert. We always insert/increment, then check.
   const rows = await sql<{ count: number }[]>`
-    insert into rate_limits (ip_hash, day, count)
-    values (${ipHash}, current_date, 1)
-    on conflict (ip_hash, day)
+    insert into rate_limits (ip_hash, day, tool, count)
+    values (${ipHash}, current_date, ${tool}, 1)
+    on conflict (ip_hash, day, tool)
     do update set count = rate_limits.count + 1
     returning count
   `;
   const used = rows[0].count;
+  const limit = LIMITS[tool];
   return {
     used,
-    remaining: Math.max(0, FREE_LETTER_LIMIT - used),
-    limit: FREE_LETTER_LIMIT,
-    blocked: used > FREE_LETTER_LIMIT,
+    remaining: Math.max(0, limit - used),
+    limit,
+    blocked: used > limit,
   };
 }
