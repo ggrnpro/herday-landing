@@ -23,7 +23,7 @@ export function ComposeStage({ onSubmit }: Props) {
   const [situation, setSituation] = useState("");
   const [needs, setNeeds] = useState<NeedKey[]>([]);
   const [tone, setTone] = useState<ToneKey>("gentle");
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const questionRefs = useRef<Array<HTMLDivElement | null>>([]);
 
   // Pre-fill name from a previous tool run if available.
   useEffect(() => {
@@ -35,6 +35,22 @@ export function ComposeStage({ onSubmit }: Props) {
       // ignore
     }
   }, []);
+
+  // After step changes, smoothly bring the newly-revealed question into
+  // view. We wait ~140ms so Framer Motion has actually mounted the new
+  // block (otherwise getBoundingClientRect points at the old layout).
+  // Offset of 96px clears the sticky nav and gives the eyebrow room.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (step === 0) return;
+    const t = window.setTimeout(() => {
+      const el = questionRefs.current[step];
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY - 96;
+      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    }, 160);
+    return () => window.clearTimeout(t);
+  }, [step]);
 
   const currentKey = ORDER[step];
   const canContinue = (() => {
@@ -49,9 +65,8 @@ export function ComposeStage({ onSubmit }: Props) {
     if (!canContinue) return;
     if (step < ORDER.length - 1) {
       setStep((s) => s + 1);
-      requestAnimationFrame(() => {
-        scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-      });
+      // Scroll is handled by the useEffect above so we don't fire it
+      // here — at this point the new question hasn't mounted yet.
     } else {
       onSubmit({
         name: name.trim(),
@@ -83,25 +98,30 @@ export function ComposeStage({ onSubmit }: Props) {
 
         <div className="mt-12 space-y-12">
           {ORDER.slice(0, step + 1).map((key, i) => (
-            <QuestionBlock
+            <div
               key={key}
-              questionKey={key}
-              active={i === step}
-              past={i < step}
-              name={name}
-              situation={situation}
-              needs={needs}
-              tone={tone}
-              onName={setName}
-              onSituation={setSituation}
-              onToggleNeed={toggleNeed}
-              onTone={setTone}
-              onSubmitEnter={next}
-            />
+              ref={(el) => {
+                questionRefs.current[i] = el;
+              }}
+              style={{ scrollMarginTop: 96 }}
+            >
+              <QuestionBlock
+                questionKey={key}
+                active={i === step}
+                past={i < step}
+                name={name}
+                situation={situation}
+                needs={needs}
+                tone={tone}
+                onName={setName}
+                onSituation={setSituation}
+                onToggleNeed={toggleNeed}
+                onTone={setTone}
+                onSubmitEnter={next}
+              />
+            </div>
           ))}
         </div>
-
-        <div ref={scrollRef} />
 
         <motion.div
           initial={{ opacity: 0, y: 16 }}

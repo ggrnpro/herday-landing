@@ -42,7 +42,22 @@ export function ComposeStage({ onSubmit }: Props) {
   const [horizonMonths, setHorizonMonths] = useState<number | null>(null);
   const [struggle, setStruggle] = useState("");
   const [values, setValues] = useState<string[]>([]);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const questionRefs = useRef<Array<HTMLDivElement | null>>([]);
+
+  // After step changes, smoothly bring the newly-revealed question into
+  // view. We wait ~140ms so Framer Motion has actually mounted the new
+  // block. 96px offset clears the sticky nav.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (step === 0) return;
+    const t = window.setTimeout(() => {
+      const el = questionRefs.current[step];
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY - 96;
+      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    }, 160);
+    return () => window.clearTimeout(t);
+  }, [step]);
 
   const currentKey = ORDER[step];
   const canContinue = (() => {
@@ -61,10 +76,8 @@ export function ComposeStage({ onSubmit }: Props) {
     if (!canContinue) return;
     if (step < ORDER.length - 1) {
       setStep((s) => s + 1);
-      // smooth scroll the new question into view
-      requestAnimationFrame(() => {
-        scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-      });
+      // Scroll handled by useEffect above — the new question hasn't
+      // mounted yet at this point.
     } else {
       onSubmit({
         name: name.trim(),
@@ -93,27 +106,32 @@ export function ComposeStage({ onSubmit }: Props) {
 
         <div className="mt-12 space-y-12">
           {ORDER.slice(0, step + 1).map((key, i) => (
-            <QuestionBlock
+            <div
               key={key}
-              questionKey={key}
-              active={i === step}
-              past={i < step}
-              name={name}
-              age={age}
-              horizonMonths={horizonMonths}
-              struggle={struggle}
-              values={values}
-              onName={setName}
-              onAge={setAge}
-              onHorizon={setHorizonMonths}
-              onStruggle={setStruggle}
-              onToggleValue={toggleValue}
-              onSubmitEnter={next}
-            />
+              ref={(el) => {
+                questionRefs.current[i] = el;
+              }}
+              style={{ scrollMarginTop: 96 }}
+            >
+              <QuestionBlock
+                questionKey={key}
+                active={i === step}
+                past={i < step}
+                name={name}
+                age={age}
+                horizonMonths={horizonMonths}
+                struggle={struggle}
+                values={values}
+                onName={setName}
+                onAge={setAge}
+                onHorizon={setHorizonMonths}
+                onStruggle={setStruggle}
+                onToggleValue={toggleValue}
+                onSubmitEnter={next}
+              />
+            </div>
           ))}
         </div>
-
-        <div ref={scrollRef} />
 
         {/* sticky-ish action bar */}
         <motion.div
