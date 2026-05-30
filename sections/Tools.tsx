@@ -1,4 +1,5 @@
 import { Reveal } from "@/components/Reveal";
+import { TiltCard } from "@/components/TiltCard";
 
 type Tool = {
   slug: string;
@@ -113,21 +114,21 @@ export function Tools() {
             return (
               <Reveal key={t.slug} delay={0.06 * i}>
                 {live ? (
-                  <a
+                  <TiltCard
                     href={`/tools/${t.slug}`}
-                    className="group block rounded-3xl p-7 h-full transition-all hover:-translate-y-0.5"
+                    className="group block rounded-3xl p-7 h-full no-underline"
                     style={cardStyle}
                   >
                     {inner}
-                  </a>
+                  </TiltCard>
                 ) : (
-                  <div
-                    aria-disabled="true"
+                  <TiltCard
+                    ariaDisabled
                     className="block rounded-3xl p-7 h-full cursor-not-allowed opacity-65"
                     style={cardStyle}
                   >
                     {inner}
-                  </div>
+                  </TiltCard>
                 )}
               </Reveal>
             );

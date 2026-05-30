@@ -578,3 +578,190 @@ body {
   outline-offset: 3px;
   border-radius: 4px;
 }
+
+/* ---------------------------------------------------------------------------
+   Shiny merlot CTA — premium animated pill
+   Adapted from 21st.dev "Shiny Button" (CSS-only, conic-gradient spin + shine)
+   Brand reskin: merlot bg, pink/cream highlight sweep, cream foreground.
+   --------------------------------------------------------------------------- */
+@property --shiny-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+@property --shiny-angle-offset {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+@property --shiny-percent {
+  syntax: "<percentage>";
+  initial-value: 5%;
+  inherits: false;
+}
+@property --shiny-shine {
+  syntax: "<color>";
+  initial-value: #ffe3f0;
+  inherits: false;
+}
+
+.btn-shiny-merlot {
+  --shiny-bg: #8a3556;
+  --shiny-bg-subtle: #6b1923;
+  --shiny-fg: #fef7df;
+  --shiny-highlight: #ffb5d2;
+  --shiny-highlight-subtle: #ffd9e6;
+  --shiny-anim: shiny-spin linear infinite;
+  --shiny-duration: 3s;
+  --shiny-shadow-size: 2px;
+  --shiny-transition: 800ms cubic-bezier(0.25, 1, 0.5, 1);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  isolation: isolate;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  outline-offset: 4px;
+  padding: 14px 28px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  text-decoration: none;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--shiny-fg);
+  background:
+    linear-gradient(var(--shiny-bg), var(--shiny-bg)) padding-box,
+    conic-gradient(
+      from calc(var(--shiny-angle) - var(--shiny-angle-offset)),
+      transparent,
+      var(--shiny-highlight) var(--shiny-percent),
+      var(--shiny-shine) calc(var(--shiny-percent) * 2),
+      var(--shiny-highlight) calc(var(--shiny-percent) * 3),
+      transparent calc(var(--shiny-percent) * 4)
+    ) border-box;
+  box-shadow:
+    inset 0 0 0 1px var(--shiny-bg-subtle),
+    0 12px 32px -12px rgba(138, 53, 86, 0.45);
+  transition: var(--shiny-transition);
+  transition-property: --shiny-angle-offset, --shiny-percent, --shiny-shine, transform, box-shadow;
+}
+
+.btn-shiny-merlot::before,
+.btn-shiny-merlot::after,
+.btn-shiny-merlot > span::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-start: 50%;
+  translate: -50% -50%;
+  z-index: -1;
+}
+
+.btn-shiny-merlot:active {
+  translate: 0 1px;
+}
+
+/* dot pattern in border ring */
+.btn-shiny-merlot::before {
+  --size: calc(100% - var(--shiny-shadow-size) * 3);
+  --position: 2px;
+  --space: calc(var(--position) * 2);
+  width: var(--size);
+  height: var(--size);
+  background:
+    radial-gradient(
+      circle at var(--position) var(--position),
+      rgba(255, 255, 255, 0.7) calc(var(--position) / 4),
+      transparent 0
+    ) padding-box;
+  background-size: var(--space) var(--space);
+  background-repeat: space;
+  mask-image: conic-gradient(
+    from calc(var(--shiny-angle) + 45deg),
+    black,
+    transparent 10% 90%,
+    black
+  );
+  border-radius: inherit;
+  opacity: 0.35;
+  z-index: -1;
+}
+
+/* inner pink sweep */
+.btn-shiny-merlot::after {
+  width: 100%;
+  aspect-ratio: 1;
+  background: linear-gradient(
+    -50deg,
+    transparent,
+    var(--shiny-highlight),
+    transparent
+  );
+  mask-image: radial-gradient(circle at bottom, transparent 40%, black);
+  opacity: 0.5;
+}
+
+.btn-shiny-merlot > span {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* breathing glow on hover */
+.btn-shiny-merlot > span::before {
+  --size: calc(100% + 1rem);
+  width: var(--size);
+  height: var(--size);
+  box-shadow: inset 0 -1ex 2rem 4px var(--shiny-highlight);
+  opacity: 0;
+  transition: opacity var(--shiny-transition);
+  animation: calc(var(--shiny-duration) * 1.5) shiny-breathe linear infinite;
+}
+
+.btn-shiny-merlot,
+.btn-shiny-merlot::before,
+.btn-shiny-merlot::after {
+  animation:
+    var(--shiny-anim) var(--shiny-duration),
+    var(--shiny-anim) calc(var(--shiny-duration) / 0.4) reverse paused;
+  animation-composition: add;
+}
+
+.btn-shiny-merlot:hover,
+.btn-shiny-merlot:focus-visible {
+  --shiny-percent: 18%;
+  --shiny-angle-offset: 95deg;
+  --shiny-shine: var(--shiny-highlight-subtle);
+}
+
+.btn-shiny-merlot:hover,
+.btn-shiny-merlot:hover::before,
+.btn-shiny-merlot:hover::after,
+.btn-shiny-merlot:focus-visible,
+.btn-shiny-merlot:focus-visible::before,
+.btn-shiny-merlot:focus-visible::after {
+  animation-play-state: running;
+}
+
+.btn-shiny-merlot:hover > span::before,
+.btn-shiny-merlot:focus-visible > span::before {
+  opacity: 1;
+}
+
+@keyframes shiny-spin {
+  to { --shiny-angle: 360deg; }
+}
+
+@keyframes shiny-breathe {
+  from, to { scale: 1; }
+  50% { scale: 1.2; }
+}

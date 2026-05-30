@@ -44,11 +44,13 @@ export function Hero() {
 
             <Reveal delay={0.3}>
               <div className="mt-10 flex flex-wrap items-center gap-4">
-                <a href="#cta" className="btn-merlot">
-                  {copy.hero.cta_primary}
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                <a href="#cta" className="btn-shiny-merlot">
+                  <span>
+                    {copy.hero.cta_primary}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
                 </a>
                 <a href="#hear" className="btn-ghost">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
