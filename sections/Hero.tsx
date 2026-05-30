@@ -2,6 +2,7 @@ import { copy } from "@/messages/en";
 import { PhoneMockup } from "@/components/PhoneMockup";
 import { Reveal } from "@/components/Reveal";
 import { Flower } from "@/components/Flower";
+import { RotatingWord } from "@/components/RotatingWord";
 
 export function Hero() {
   return (
@@ -31,7 +32,12 @@ export function Hero() {
 
             <Reveal delay={0.1}>
               <h1 className="display-1 mt-7 max-w-[18ch]">
-                {copy.hero.title.pre}{" "}
+                {copy.hero.title.pre_before_rotor}{" "}
+                <RotatingWord
+                  words={copy.hero.title.rotor}
+                  className="text-merlot"
+                />
+                {copy.hero.title.pre_after_rotor}{" "}
                 <em className="italic font-light shimmer-italic">{copy.hero.title.em}</em>
               </h1>
             </Reveal>

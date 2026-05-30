@@ -31,7 +31,9 @@ export const copy = {
   hero: {
     eyebrow: "Coming soon · for iPhone",
     title: {
-      pre: "You already have a voice inside that says cruel things.",
+      pre_before_rotor: "You already have a voice inside that says",
+      rotor: ["cruel things", "mean lies", "quiet doubts", "old stories"],
+      pre_after_rotor: ".",
       em: "HerDay is the other one.",
     },
     deck:

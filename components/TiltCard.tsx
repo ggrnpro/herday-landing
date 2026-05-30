@@ -26,10 +26,10 @@ export function TiltCard({
 }: Props) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  const sx = useSpring(x, { stiffness: 200, damping: 18, mass: 0.4 });
-  const sy = useSpring(y, { stiffness: 200, damping: 18, mass: 0.4 });
-  const rotateX = useTransform(sy, [-0.5, 0.5], ["6deg", "-6deg"]);
-  const rotateY = useTransform(sx, [-0.5, 0.5], ["-6deg", "6deg"]);
+  const sx = useSpring(x, { stiffness: 220, damping: 16, mass: 0.4 });
+  const sy = useSpring(y, { stiffness: 220, damping: 16, mass: 0.4 });
+  const rotateX = useTransform(sy, [-0.5, 0.5], ["12deg", "-12deg"]);
+  const rotateY = useTransform(sx, [-0.5, 0.5], ["-12deg", "12deg"]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -60,7 +60,12 @@ export function TiltCard({
         style={motionStyle}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        whileHover={{ y: -3 }}
+        whileHover={{
+          y: -8,
+          scale: 1.02,
+          boxShadow: "0 36px 70px -28px rgba(138, 53, 86, 0.45)",
+        }}
+        transition={{ type: "spring", stiffness: 220, damping: 18 }}
       >
         {children}
       </motion.a>
