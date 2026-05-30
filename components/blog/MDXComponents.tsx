@@ -270,7 +270,7 @@ export function AppCTA({
   variant?: string;
   utm?: string;
 }) {
-  const headlines: Record<string, { eyebrow: string; title: ReactNode; body: string }> = {
+  const headlines: Record<string, { eyebrow: string; title: ReactNode; body: string; href: string; cta: string }> = {
     "hear-your-voice": {
       eyebrow: "If this resonated",
       title: (
@@ -279,15 +279,36 @@ export function AppCTA({
         </>
       ),
       body: "HerDay is a 30-second morning ritual built on your own cloned voice. Conditional when you need it, addressed by name, written for the season you're in. Join the waitlist for early access.",
+      href: "/",
+      cta: "Join the waitlist",
     },
     tool: {
       eyebrow: "Try it now",
       title: <>Try our free <em className="italic font-light text-[var(--color-merlot)]">affirmation generator</em>.</>,
       body: "No signup needed. Tells you whether to phrase yours declarative or conditional based on a 10-second check.",
+      href: "/tools/affirmation-generator",
+      cta: "Open the generator",
+    },
+    "letter-tool": {
+      eyebrow: "Try it now",
+      title: <>Write your <em className="italic font-light text-[var(--color-merlot)]">letter to your future self</em>, free.</>,
+      body: "Answer a few quiet questions, get a personalized letter, and schedule it to arrive at a date you choose. No signup needed.",
+      href: "/tools/future-self-letter",
+      cta: "Write the letter",
+    },
+    "inner-critic-tool": {
+      eyebrow: "Try it now",
+      title: <>Translate your <em className="italic font-light text-[var(--color-merlot)]">inner critic</em>, free.</>,
+      body: "Type what your inner critic just said. We'll show you the underlying concern and a kinder phrasing — based on the same conditional language model used inside HerDay.",
+      href: "/tools/inner-critic-translator",
+      cta: "Open the translator",
     },
   };
   const c = headlines[variant] ?? headlines["hear-your-voice"];
-  const href = utm ? `/?${utm}` : "/";
+  const baseHref = c.href;
+  const href = utm
+    ? (baseHref.includes("?") ? `${baseHref}&${utm}` : `${baseHref}?${utm}`)
+    : baseHref;
 
   return (
     <aside className="my-16 rounded-3xl border border-[var(--color-line-strong)] bg-[var(--color-pink-blush)] px-7 py-10 md:px-12 md:py-14">
@@ -301,7 +322,7 @@ export function AppCTA({
         {c.body}
       </p>
       <Link href={href} className="btn-merlot">
-        Join the waitlist
+        {c.cta}
       </Link>
     </aside>
   );
